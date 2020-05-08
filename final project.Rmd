@@ -1,0 +1,116 @@
+---
+title: "DS4001 Final Project"
+author: "Alex Shen, Andrew Niu"
+date: "5/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question
+**How can we distinguish fake news from real news?**
+
+We've all been told growing up, "Don't believe everything you read on the Internet." In the past, this simply meant avoiding obvious scams and hoaxes, like emails from Nigerian princes suspiciously promising you a share of their wealth. However, in this day and age, the proliferation of digital media in modern society has enabled a far more insidious practice: the writing and mass distribution of so-called "news" articles that *seem* true, and in fact may even incorporate some truthful elements, to push false or misleading claims. 
+
+## Exploratory Data Analysis
+
+```{r libraries, message=FALSE, warning=FALSE}
+library(tidytext)
+library(readr)
+library(dplyr)
+library(lubridate)
+library(scales)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(gridExtra)
+```
+
+
+
+```{r message=FALSE, warning=FALSE}
+
+real_news = read_csv("True.csv")
+fake_news = read_csv("Fake.csv")
+data = bind_rows(real_news %>% mutate(truth = "Real"),
+                 fake_news %>% mutate(truth = "Fake")) %>% 
+  mutate(formatted_date = mdy(date))
+
+```
+
+```{r, cache=TRUE, message=FALSE}
+tidy_data = data %>% 
+  unnest_tokens(word, text, token="words") %>%
+  anti_join(stop_words) %>% 
+  filter(!str_detect(word, "[.:0-9]"))
+
+frequency <- tidy_data %>% 
+  group_by(truth) %>% 
+  count(word, sort = TRUE) %>% 
+  left_join(tidy_data %>% 
+              group_by(truth) %>% 
+              summarise(total = n()))
+```
+
+## Time window (??)
+```{r, warning=FALSE}
+ggplot(data, aes(x=formatted_date, fill=truth)) +
+  geom_histogram(position="identity", bins=30, show.legend=FALSE) +
+  facet_wrap(~truth, ncol=1) + 
+  labs(x="Date", y="Count")
+
+```
+
+As you can see, we're working with articles spanning from early 2015 to the end of 2018. Looking at general trends, it seems like fake news spiked in 2016 and has been gradually declining ever since. The most likely explanation for this is simply the 2016 presidential election, since presidential election years typically always have increased levels of political awareness and activity. With more people getting interested in politics, a market appears for flashy clickbait articles that don't always stand up to scrutiny. We suspect that the identities of the candidates who ran in that particular election, Hillary Clinton and Donald Trump, who were both quite controversial, fueled this spike to some extent, but we're unable to confirm this hypothesis at this time. 
+
+By comparison, real news seems to have been fairly consistent throughout 2016 and most of 2017, abruptly increasing by a huge margin at the end of 2017 for some reason. However, it did go back down by 2018, returning to a level similar to what it had been previously. With the obvious exception of late 2017, this consistent trend also makes sense — by comparison to fake news, which is often written by smaller organizations whose popularity (and thus ability to create more content) wanes and waxes with presidential election years, "real" news tends to come from mainstream media outlets, who are much better established and have consistent readership. Since there's always some news that needs to be reported, professional journalists should be able to output more or less the same amount of content regardless of the era they're in. We're not certain as to why the amount of articles jumped so drastically in late 2017 and then declined almost immediately after, but it could simply be sampling bias — the creator of this dataset may have just found it more convenient to pull more recent articles.
+
+
+```{r}
+top_words = frequency %>% 
+  arrange(desc(n)) %>%
+  group_by(truth) %>% slice(1:5)
+
+top_fake = top_words[1:5,]
+top_real = top_words[6:10,]
+
+
+fake_plot = ggplot(top_fake, aes(x=reorder(word,n), y=n)) +
+  geom_col(fill="#FF4242") +
+  facet_wrap(~truth) +
+  theme(axis.text.x = element_text(angle = 15, hjust = 1)) +
+  labs(x="Word", y="Frequency")
+
+real_plot = ggplot(top_real, aes(x=reorder(word,n), y=n)) +
+  geom_col(fill="#2BFF2B") +
+  facet_wrap(~truth) +
+  theme(axis.text.x = element_text(angle = 15, hjust = 1)) +
+  labs(x="Word", y="Frequency")
+
+grid.arrange(fake_plot, real_plot, ncol=2)
+```
+
+As you can see, the words "Trump" and "President" are both frequently included in both fake and real news. This is, of course, not particularly surprising. Any US president would naturally be at or near the top of a word count of a dataset containing primarily American news, but this doesn't explain why Trump's name appears *so much more* than any other word in fake news particularly, when the gap is significantly closer in real news. Our guess is that Trump is simply an especially polarizing figure, so demagogues on both sides of the political aisle have an incentive to constantly invoke his name to stir up either support or opposition of the president.
+
+"Obama" and "Clinton" also show up prominently, which makes sense given that Obama was the previous president and Hillary ran essentially as his successor. Both are quite controversial in right-wing media (especially with extreme sources who are likely to create fake news), and the election year where both were prominent in mainstream political discourse spans a large portion of the dataset, so both of them were naturally mentioned plenty of times in fake news.
+
+Other than President Trump, real news covers more mundane topics — "house" (presumably just part of "White House"), "government," and "Reuters" (a prominent international news organization) round out our top 5 words. This also lines up with what we expected, because a lot of the news isn't supposed to be flashy; a lot of important reporting is done on the complex mechanics of government, which may not be interesting to a mainstream audience.
+
+```{r}
+# stuff in log ratio
+# arranged_frequency <- frequency %>% 
+#   select(truth, word, freq) %>% 
+#   spread(truth, freq) %>%
+#   arrange(Real, Fake)
+
+
+
+
+```
+## Methods 
+
+## Conclusions
+
+## Future Work

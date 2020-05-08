@@ -1,0 +1,10 @@
+base
+tidytext
+readr
+dplyr
+lubridate
+scales
+tidyr
+stringr
+ggplot2
+gridExtra
