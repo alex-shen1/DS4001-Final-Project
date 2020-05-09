@@ -1,37 +1,29 @@
 fake = read_csv("Fake.csv") %>% mutate(real="fake")
 real = read_csv("True.csv") %>% mutate(real="real")
-
 news = bind_rows(fake,real)
-
 cleaned = news %>%
   unnest_tokens(word, text, token="words") %>%
   anti_join(stop_words) %>%
   filter(!str_detect(word, "[.:0-9]"))
-
 library(textdata)
 library(tidyr)
 get_sentiments('afinn')
 get_sentiments('nrc')
-
 sentiment_affin = cleaned %>% 
   inner_join(get_sentiments("afinn"))
-
 affin_counts = sentiment_affin %>%
   group_by(real) %>%
   count(value, sort = TRUE)
 affin_totals = sentiment_affin %>%
   group_by(real) %>%
   summarise(total = n())
-affin_frequency = counts %>%
+affin_frequency = affin_counts %>%
   left_join(affin_totals) %>%
   mutate(freq = n/total)
-
-ggplot(affin_frequency, aes(x=value, y = freq, fill=factor(real))) +
+ggplot(affin_frequency, aes(x=value, y = freq, fill=real)) +
   geom_bar(stat="identity",position="dodge")
-
 abs = sentiment_affin %>%
   mutate(value = abs(value))
-
 abs_counts = abs %>%
   group_by(real) %>%
   count(value, sort = TRUE)
@@ -41,11 +33,8 @@ abs_totals = abs %>%
 abs_frequency = abs_counts %>%
   left_join(abs_totals) %>%
   mutate(freq = n/total)
-
-ggplot(abs_frequency, aes(x=value, y = freq, fill=factor(real))) +
+ggplot(abs_frequency, aes(x=value, y = freq, fill=real)) +
   geom_bar(stat="identity",position="dodge")
-
-
 nrc_counts = sentiment_nrc %>%
   group_by(real) %>%
   count(sentiment, sort = TRUE)
@@ -55,11 +44,5 @@ nrc_totals = sentiment_nrc %>%
 nrc_frequency = nrc_counts %>%
   left_join(nrc_totals) %>%
   mutate(freq = n/total)
-
-sentiment_nrc = cleaned %>% 
-  inner_join(get_sentiments("nrc"))
-
-get_freq(sentiment_nrc, sentiment)
-  
 ggplot(nrc_frequency, aes(x=sentiment, y = freq, fill=real)) +
   geom_bar(stat="identity",position="dodge")

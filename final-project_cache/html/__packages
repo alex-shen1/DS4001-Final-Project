@@ -8,3 +8,6 @@ tidyr
 stringr
 ggplot2
 gridExtra
+textdata
+purrr
+broom
