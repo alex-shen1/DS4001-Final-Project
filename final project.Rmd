@@ -272,7 +272,7 @@ Here we analyze the sentiment of the text of each article.
 
 #### AFINN
 
-It appears that real news articles have a higher frequency of moderate sentiment values, whereas fake news articles. It's also worth noting that fake articles lean more towards negatively charged words, whereas real news articles seem to be a little less skewed.
+It appears that real news articles have a higher frequency of moderate sentiment values, whereas fake news articles tend to feature stronger sentiments in either direction. It's also worth noting that fake articles lean more towards negatively charged words, whereas real news articles seem to be a little more balanced.
 
 ```{r afinn,cache=TRUE, echo=FALSE}
 plot_sentiments(get_freq(sentiment_afinn, "value"), "AFINN Sentiments") + 
@@ -281,7 +281,7 @@ plot_sentiments(get_freq(sentiment_afinn, "value"), "AFINN Sentiments") +
 
 #### AFINN Absolute Value
 
-If we take the absolute value of the AFINN score, we can isolate the overall strength of sentiment in our text. We can see even more clearly that real news articles have a higher frequency of moderate AFFFIN values of 1 and 2, whereas fake news articles tend to use more charged language.
+If we take the absolute values of the AFINN scores, we can isolate the overall strength of sentiment in our text. We can see even more clearly that real news articles have a higher frequency of moderate AFINN values (1-2), whereas fake news articles tend to use stronger wording (AFINN of 3+)
 
 ```{r abs_value, cache=TRUE, echo=FALSE}
 plot_sentiments(get_freq(abs, "value"), "AFINN Sentiments (Absolute Values)") + 
@@ -290,7 +290,7 @@ plot_sentiments(get_freq(abs, "value"), "AFINN Sentiments (Absolute Values)") +
 
 #### NRC
 
-Our NRC sentiment analysis gives us a little more specificity to our analysis while also confirming our findings from the AFINN analysis. Fake news articles have higher frequencies of negatively charged words, especially those of anger, disgust, and general negative sentiment. At the same time, they have lower occurrences of positivity and trust when compared to real news articles.
+Our NRC sentiment analysis gives us a little more specificity while also confirming our findings from the AFINN analysis. Fake news articles have higher frequencies of negatively charged words, especially those of anger, disgust, and general negative sentiment. At the same time, they have lower occurrences of positivity and trust when compared to real news articles.
 
 ```{r nrc, cache=TRUE, echo=FALSE}
 plot_sentiments(get_freq(sentiment_nrc, "sentiment"), "NRC Sentiments")
@@ -379,7 +379,7 @@ plot_combined_sentiments = function(dataset, title_str){
 
 #### AFINN
 
-As seen in the earlier graphs, fake news articles are more charged, particularly with negative sentiment, but we can also observe the difference in magnitude between the titles and the articles themselves. In every category except for neutral positive words, the title has a greater magnitude of difference than the articles. This essentially means that the level of bias is even greater in fake news titles when compared to the level of bias in fake news articles.
+As seen in the earlier graphs, fake news articles are more charged, particularly with negative sentiment, but we can also observe the difference in magnitude between the titles and the articles themselves. In every category except for neutral positive words, the magnitude of the difference between real and fake news is greater for titles than articles. This essentially means that the level of bias is even greater in fake news titles when compared to the level of bias in fake news articles.
 
 ```{r AFINN_combined, echo=FALSE}
 plot_combined_sentiments(title_vs_article(title_afinn, sentiment_afinn, "value"), 
@@ -389,7 +389,7 @@ plot_combined_sentiments(title_vs_article(title_afinn, sentiment_afinn, "value")
 
 #### AFINN Absolute Value
 
-Similar to the absolute value graphs above, this graph further emphasizes the difference in level of bias. The difference between real and fake news titles are even more polarized than the articles themselves.
+Similar to the absolute value graphs above, this graph further emphasizes the difference in level of bias. Whether positive or negative, fake news titles appear to be even more exaggerated than the articles themselves.
 
 ```{r abs_combined, echo=FALSE}
 plot_combined_sentiments(title_vs_article(title_abs, abs, "value"), 
@@ -399,7 +399,7 @@ plot_combined_sentiments(title_vs_article(title_abs, abs, "value"),
 
 #### NRC
 
-We again see that fake news articles bias more towards negative emotions with the titles of these fake news articles being even more negative. We can see the same trend with real news articles and positivity and trust.
+We again see that fake news articles are skewed more towards negative emotions, with their titles being even more negative. On the other hand, real news articles and their titles follow a similar pattern of titles being stronger than their articles, but they are more likely to trend towards the direction of sentiments like positivity and trust.
 
 ```{r NRC_combined, echo=FALSE}
 plot_combined_sentiments(title_vs_article(title_nrc, sentiment_nrc, "sentiment"), 
