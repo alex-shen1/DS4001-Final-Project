@@ -200,7 +200,7 @@ plot_freqtime = function(truth_val){
 }
 ```
 
-## {.tabset}
+## Frequency Over Time {.tabset}
 
 ### Real News Words Over Time
 ```{r real_graph, echo=FALSE}
@@ -261,7 +261,7 @@ plot_sentiments = function(dataset, title_str){
 }
 ```
 
-### {.tabset}
+### Article Sentiment {.tabset}
 
 #### AFINN
 
@@ -306,7 +306,7 @@ title_nrc = titles %>%
   inner_join(get_sentiments("nrc"))
 ```
 
-### {.tabset}
+### Title Sentiment {.tabset}
 
 When we run the same sentiment analysis on the titles of our articles, we get very similar results. However, the differences seem to be more exaggerated for our titles than the actual content of our articles. This trend confirms our hypotheses, as authors of fake news articles tend to use flashy and clickbaity titles in hopes of luring in potential readers. 
 
@@ -328,7 +328,7 @@ plot_sentiments(get_freq(title_abs, "value"), "Title AFINN Sentiments (Absolute 
 plot_sentiments(get_freq(title_nrc, "sentiment"), "Title NRC Sentiments")
 ```
 
-### Comparison
+### Comparison {.tabset}
 
 To further investigate the difference in sentiment, or perhaps exaggeration, of our titles, we compare them directly to the sentiment of the articles themselves.
 
@@ -371,8 +371,6 @@ plot_combined_sentiments = function(dataset, title_str){
 
 ```
 
-### {.tabset}
-
 #### AFINN
 
 As seen in the earlier graphs, fake news articles are more charged, particularly with negative sentiment, but we can also observe the difference in magnitude between the titles and the articles themselves. In every category except for neutral positive words, the title has a greater magnitude of difference than the articles. This essentially means that the level of bias is even greater in fake news titles when compared to the level of bias in fake news articles.
@@ -402,8 +400,8 @@ plot_combined_sentiments(title_vs_article(title_nrc, sentiment_nrc, "sentiment")
                          "Title vs. Article NRC Sentiment")
 ```
 
-## Conclusions
+# Conclusions
 
-## Future Work
+# Future Work
 
 One major issue we ran into while working is that we were completely uncertain as to how this dataset was created, and thus unsure that it was reliably sampled. With a subject as polarized as what constitutes "fake" news, it's important to have a trustworthy dataset to base your analysis off of. However, there were some notable issues with our particular dataset that made us doubt its legitimacy. For example, the incredible spike of real news datapoints in late 2017 and the dramatic drop of mentions of "Trump," who as the President should always be quite commonly featured in mainstream news articles, were both phenomena that we couldn't think of an explanation for, making us believe it was the product of unreliable sampling by the creator of the dataset. The unusually high occurence of "Reuters" a new outlet that while well-known, isn't exactly the first news source people think of, is also somewhat suspicious. 
