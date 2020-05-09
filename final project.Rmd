@@ -15,6 +15,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 ```
 
+![](https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fbernardmarr%2Ffiles%2F2018%2F05%2FAdobeStock_187220917-1200x796.jpg)
+
 # Question
 
 #### **What distinguishes fake news from real news?**
@@ -23,7 +25,7 @@ We've all been told growing up, "Don't believe everything you read on the Intern
 
 As Cathy O'Neil warned us in *Weapons of Math Destruction*, "about two-thirds of American adults have a profile on Facebook. They spend thirty-nine minutes a day on the site, only four minutes less than they dedicate to face-to-face socializing. Nearly half of them, according to a Pew Research Center report, count on Facebook to deliver at least some of their news..." It goes without saying that Facebook is not exactly a hub of reputable reporting, so the fact that this many people get their news from such an unreliable platform is deeply concerning for anyone concerned about having a well-informed populace. Thus, we wanted to explore, in a data-driven way, what characterizes fake news and how we might be able to identify it. 
 
-**talk about investigation into FB fake news**
+Other investigations into fake news are plentiful and have been extensively covered in the media — for example, [Politico](https://www.politico.com/news/2020/04/16/facebook-fake-news-coronavirus-190054) recently reported that "millions of users" have been exposed to fake news about coronavirus, with 40% of claims officially debunked by fact checkers still spreading on the platform. More relevant to our timeframe, there were questions as to the extent to which Russian propaganda was distributed on Facebook as fake news during the 2016 election. 
 
 # Exploratory Data Analysis
 
@@ -408,6 +410,14 @@ plot_combined_sentiments(title_vs_article(title_nrc, sentiment_nrc, "sentiment")
 
 # Conclusions
 
+By and large, most of our hypotheses were confirmed by the evidence. Fake news tended to focus on prominent political figures like the president, while real news tended to cover a broader range of government activity. Our sentiment analysis confirmed our prediction that fake news articles would be more strongly charged than real news, a difference that was even more stark when comparing titles. After all, the point of titles is to draw in readers, so having a flashier title makes sense even for real news. 
+
+The radical sentiments in fake news are what make it the most troubling — simply disseminating fake news that is completely neutral doesn’t actually do anything, but reading especially polarized fake news ends up polarizing people. Since real news tends to be more neutral, and people tend to prefer news that lines up with their preexisting opinions, this leads to a negative feedback loop of people reading progressively more extreme news with an increasingly large detachment from the truth. Anyone should be able to see why this is immensely troubling, which is why the simplest advice we can offer is that next time you read a news article, ask yourself: “How does this make me *feel?*” If your answer is a strong emotion, then it’s more likely that the article is questionable. 
+
+Everyone is biased in some way or another, and this will always inevitably bleed into anyone’s news coverage, so it’s also a good idea to get news from a variety of different sources. The line between “real” and “fake” is not always as clear as our dataset might imply, so the best way to avoid being misled is a balanced media diet from reputable sources. 
+
 # Future Work
 
-One major issue we ran into while working is that we were completely uncertain as to how this dataset was created, and thus unsure that it was reliably sampled. With a subject as polarized as what constitutes "fake" news, it's important to have a trustworthy dataset to base your analysis off of. However, there were some notable issues with our particular dataset that made us doubt its legitimacy. For example, the incredible spike of real news datapoints in late 2017 and the dramatic drop of mentions of "Trump," who as the President should always be quite commonly featured in mainstream news articles, were both phenomena that we couldn't think of an explanation for, making us believe it was the product of unreliable sampling by the creator of the dataset. The unusually high occurence of "Reuters" a new outlet that while well-known, isn't exactly the first news source people think of, is also somewhat suspicious. 
+One major issue we ran into while working is that we were completely uncertain as to how this dataset was created, and thus unsure that it was reliably sampled. With a subject as polarized as what constitutes "fake" news, it's important to have a trustworthy dataset to base your analysis off of. However, there were some notable issues with our particular dataset that made us doubt its legitimacy. For example, the incredible spike of real news datapoints in late 2017 and the dramatic drop of mentions of "Trump," who as the President should always be quite commonly featured in mainstream news articles, were both phenomena that we couldn't think of an explanation for, making us believe it was the product of unreliable sampling by the creator of the dataset. The unusually high occurrence of "Reuters" is somewhat understandable given that many other reporters source their coverage from them, but there are other organizations like the Associated Press that perform similar functions. Given the other unexplainable characteristics of our dataset, the fact that only Reuters was in the top words is also somewhat questionable.
+
+For further study, we could build a classifier to actually determine the likelihood of whether any given news article is real or fake. Additionally, a future dataset could have some extra labels that would help develop more advanced models. There could have been a more in-depth definition of what a “fake” article is — it could mean misleading, deliberately deceptive, or just completely factually wrong. Our dataset didn’t distinguish between those, simply throwing all the articles into separate “real” and “fake” CSV files that we had to manually combine. It would have also been nice to have each articles’ source as a label; it was possible to manually find out the source just by copy/pasting the title verbatim into Google, but it would have been too tedious for us to do that for 40,000+ articles. 
