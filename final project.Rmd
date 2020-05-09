@@ -25,7 +25,7 @@ As Cathy O'Neil warned us in *Weapons of Math Destruction*, "about two-thirds of
 
 # Exploratory Data Analysis
 
-```{r libraries}
+```{r libraries, echo=FALSE}
 library(tidytext)
 library(readr)
 library(dplyr)
@@ -75,7 +75,7 @@ frequency <- cleaned %>%
 head(frequency, 5)
 ```
 
-## Time window (??)
+## Time Distribution
 
 To understand the timeframe of our dataset, we graphed a simple histogram of the dates that the articles were published.
 
@@ -138,7 +138,7 @@ Other than President Trump, real news covers more mundane topics — "house" (pr
 Another interesting difference we noticed is that fake news tends to focus on individuals (Trump, Clinton, Obama) whereas real news focuses on institutions ("government," "house," "reuters"). President Trump shows up heavily in both, but that's just because he's the president. This reemphasizes the tendency of fake news to pursue flashy content — i.e. scandalous stories about polarizing individuals — whereas real news focuses on more standard government actions.
 
 
-## Words over time
+## Words Over Time
 
 We then wondered how the top word frequencies had changed over time — our first guess was that words like "Hillary" and "Clinton" would have gone down dramatically after she lost the 2016 election, whereas Trump, having ascended to the presidency, would naturally have mentions of his name increase by a great deal.
 
