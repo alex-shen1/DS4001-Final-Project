@@ -14,6 +14,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 We've all been told growing up, "Don't believe everything you read on the Internet." In the past, this simply meant avoiding obvious scams and hoaxes, like emails from Nigerian princes suspiciously promising you a share of their wealth. However, in this day and age, the proliferation of digital media in modern society has enabled a far more insidious practice: the writing and mass distribution of so-called "news" articles that *seem* true, and in fact may even incorporate some truthful elements, to push false or misleading claims. 
 
+"...about two-thirds of American adults have a profile on Facebook. They spend thirty-nine minutes a day on the site, only four minutes less than they dedicate to face-to-face socializing. Nearly half of them, according to a Pew Research Center report, count on Facebook to deliver at least some of their news, ..."
+
 ## Exploratory Data Analysis
 
 ```{r libraries, message=FALSE, warning=FALSE}
@@ -181,20 +183,26 @@ Here, the most interesting developments are clearly Trump and Clinton, the two 2
 
 ## Sentiment Analysis
 
-However, as interesting as word frequencies are, they can't actually give us that much information as to whether or not a given article is real or fake. That's where sentiment analysis comes in, where we figure out the "sentiment" (feeling) conveyed by each word and tally up the most common sentiments expressed by both real and fake news. We can measure sentiment in two different ways: AFFIN, where sentiment is just indexed on a scale of -5 to 5 (negative to positive emotion), and NRC, which associates words with common emotions like fear, anger, and sadness. 
+As interesting as word frequencies are, they can't actually give us that much information as to whether or not a given article is real or fake. That's where sentiment analysis comes in, where we figure out the "sentiment" (feeling) conveyed by each word and tally up the most common sentiments expressed by both real and fake news. We can measure sentiment in two different ways: AFFIN, where sentiment is just indexed on a scale of -5 to 5 (negative to positive emotion), and NRC, which associates words with common emotions like fear, anger, and sadness. 
 
 A common guess might be that fake news, with its trend towards clickbait-style content, might have more extreme sentiments, but let's see how that bears out in the data.
 
 ```{r sentiments, cache=TRUE}
+
+# sent_df: dataframe with sentiment values
+# sentiment: entiment label, "value" for affin and "sentiment" for nrc
+# This function takes in a dataframe with sentiment values and outputs the frequency of each factor for both real and fake news articles.
 get_freq = function(sent_df, sentiment){
-  sent_df$sentiment = sent_df[[sentiment]]
-  counts = sent_df %>%
+  # this is a quirk with R function parameters
+  # need to create a new column called sentiment set equal to the column of the string passed into the variable sentiment
+  sent_df$sentiment = sent_df[[sentiment]] 
+  counts = sent_df %>% # Get the counts of each factor grouped by truth
     group_by(truth) %>%
     count(sentiment, sort = TRUE)
-  totals = sent_df %>%
+  totals = sent_df %>% # get total occurrences for real and fake
     group_by(truth) %>%
     summarise(total=n())
-  frequency = counts %>%
+  frequency = counts %>% # combine dataframes and calculate frequency
     left_join(totals) %>%
     mutate(freq = n/total)
   return(frequency)
