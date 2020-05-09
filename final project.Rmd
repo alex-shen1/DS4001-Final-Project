@@ -15,9 +15,9 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 
 We've all been told growing up, "Don't believe everything you read on the Internet." In the past, this simply meant avoiding obvious scams and hoaxes, like emails from Nigerian princes suspiciously promising you a share of their wealth. However, in this day and age, the proliferation of digital media in modern society has enabled a far more insidious practice: the writing and mass distribution of so-called "news" articles that *seem* true, and in fact may even incorporate some truthful elements, to push false or misleading claims. 
 
-As Cathy O'Neil warned us in *Weapons of Math Destruction*, "...about two-thirds of American adults have a profile on Facebook. They spend thirty-nine minutes a day on the site, only four minutes less than they dedicate to face-to-face socializing. Nearly half of them, according to a Pew Research Center report, count on Facebook to deliver at least some of their news..." It goes without saying that Facebook is not exactly a hub of reputable reporting, so the fact that this many people get their news from such an unreliable platform is deeply concerning for anyone concerned about having a well-informed populace. Thus, we wanted to explore, in a data-driven way, what characterizes fake news and how we might be able to prevent it from tricking us. 
+As Cathy O'Neil warned us in *Weapons of Math Destruction*, "about two-thirds of American adults have a profile on Facebook. They spend thirty-nine minutes a day on the site, only four minutes less than they dedicate to face-to-face socializing. Nearly half of them, according to a Pew Research Center report, count on Facebook to deliver at least some of their news..." It goes without saying that Facebook is not exactly a hub of reputable reporting, so the fact that this many people get their news from such an unreliable platform is deeply concerning for anyone concerned about having a well-informed populace. Thus, we wanted to explore, in a data-driven way, what characterizes fake news and how we might be able to prevent it from tricking us. 
 
-# Data Analysis
+# Exploratory Data Analysis
 
 ```{r libraries}
 library(tidytext)
@@ -47,11 +47,12 @@ data = bind_rows(real_news %>% mutate(truth = "Real"),
 ```
 
 The first thing we do with the dataset is clean it in order to make it possible for us to perform text analysis. This means running it through a "tokenizer," which breaks up the raw text data into individual words (and other components/"tokens", but mostly just words). Next, we filter out numbers and "stop words" — these are words that are syntactically necessary, but don't actually contribute to a sentences' meaning, like "the", "a", etc. Once we clean up our data, we make a dataframe containing the frequencies of each word.
+
 ```{r tokenize, cache=TRUE}
 cleaned = data %>% 
   unnest_tokens(word, text, token="words") %>%
   anti_join(stop_words) %>% 
-  filter(!str_detect(word, "[.:0-9]"))
+  filter(!str_detect(word, "[.:0-9]")) #omits strings with any of the characters in the brackets
 
 ```
 
@@ -70,7 +71,7 @@ head(frequency, 5)
 
 ## Time window (??)
 
-Obviously, with any data analysis it's important to understand the data you're using. To understand the timeframe of our dataset, we simply graphed a simple histogram of the dates that the articles were published.
+To understand the timeframe of our dataset, we graphed a simple histogram of the dates that the articles were published.
 
 ```{r plot_dates}
 ggplot(data, aes(x=formatted_date, fill=truth)) +
@@ -91,7 +92,7 @@ We're not certain as to why the amount of articles jumped so drastically in late
 
 **we wanted to understand word freqs for some reason**
 
-The simplest way ~~to do this~~ was to simply take the top 5 words from both the fake news and real news categories and examine both their individual frequencies and the distribution among the top 5.
+The simplest way ~~to do this~~ was to take the most frequent words from both the fake news and real news categories and examine both their individual frequencies and the distribution amongst these words.
 
 ```{r freqs}
 top_words = frequency %>% 
@@ -120,12 +121,11 @@ grid.arrange(fake_plot, real_plot, ncol=2)
 
 As you can see, the words "Trump" and "President" are both frequently included in both fake and real news. This is, of course, not particularly surprising. Any US president would naturally be at or near the top of a word count of a dataset containing primarily American news, but this doesn't explain why Trump's name appears *so much more* than any other word in fake news particularly, when the gap is significantly closer in real news. Our guess is that Trump is simply an especially polarizing figure, so demagogues on both sides of the political aisle have an incentive to constantly invoke his name to stir up either support or opposition of the president.
 
-**include note on how trump is SO MUCH MORE prominent in fake news vs. everything else**
 **fake media focus on people vs. institutions of government**
 
 "Obama" and "Clinton" also show up prominently, which makes sense given that Obama was the previous president and Hillary ran essentially as his successor. Both are quite controversial in right-wing media (especially with extreme sources who are likely to create fake news), and the election year where both were prominent in mainstream political discourse spans a large portion of the dataset, so both of them were naturally mentioned plenty of times in fake news.
 
-Other than President Trump, real news covers more mundane topics — "house" (presumably just part of "White House"), "government," and "Reuters" (a prominent international news organization) round out our top 5 words. This also lines up with what we expected, because a lot of the news isn't supposed to be flashy; a lot of important reporting is done on the complex mechanics of government, which may not be interesting to a mainstream audience.
+Other than President Trump, real news covers more mundane topics — "house" (presumably just part of "House of Representatives" or "White House"), "government," and "Reuters" (a prominent international news organization) round out our top 5 words. This also lines up with what we expected, because a lot of the news isn't supposed to be flashy; a lot of important reporting is done on the complex mechanics of government, which may not be interesting to a mainstream audience.
 
 
 ## Words over time
@@ -173,6 +173,7 @@ top_slopes <- slopes %>%
 ```
 
 After all that number crunching, the only thing we have left to do is to graph our real and fake news data and compare them. 
+
 ```{r plot_freqtime_function, include=FALSE}
 plot_freqtime = function(truth_val){
   freqs = words_over_time %>%
@@ -204,7 +205,7 @@ plot_freqtime("Fake")
 
 Here, the most interesting developments are clearly Trump and Clinton, the two 2016 presidential contenders. We can observe that while fake news about Clinton dropped off dramatically after her loss (as she was no longer in the public eye), Trump has consistently had the most mentions in fake news
 
-## Sentiment Analysis
+# Sentiment Analysis Methods
 
 As interesting as word frequencies are, they can't actually give us that much information as to whether or not a given article is real or fake. That's where sentiment analysis comes in, where we figure out the "sentiment" (feeling) conveyed by each word and tally up the most common sentiments expressed by both real and fake news. We can measure sentiment in two different ways: AFINN, where sentiment is just indexed on a scale of -5 to 5 (negative to positive emotion), and NRC, which associates words with common emotions like fear, anger, and sadness. 
 
