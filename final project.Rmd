@@ -69,6 +69,7 @@ cleaned = data %>%
 Using our cleaned data, we can generate a dataframe that holds the frequencies of each word grouped by real vs. fake news. Note that this value is represented by `n`, as opposed to `total` which holds the total number of words contained in fake/real news articles in the dataset.  
 
 ```{r calc_freqs}
+# frequency function from Twitter lab
 frequency <- cleaned %>% 
   group_by(truth) %>% 
   count(word, sort = TRUE) %>% 
@@ -149,6 +150,7 @@ We then wondered how the top word frequencies had changed over time — our firs
 In order to definitively answer this question, we have to look at which words have seen their frequencies change the most dramatically during the time period. Our first step is to split the word token data into one-month chunks, where we can see both the number of times a particular word was used in a month (`count`), how many times that word was used in total (`word_total`), and how many words were used in that particular month (`month_total`).
 
 ```{r words_over_time_data, cache=TRUE}
+# The following time series analysis for frequency was adapted from the Twitter lab.
 words_over_time = cleaned %>% 
   mutate(time_floor = floor_date(formatted_date, unit = "1 month")) %>% 
   count(time_floor, truth, word) %>% 
