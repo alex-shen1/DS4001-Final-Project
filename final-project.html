@@ -385,6 +385,7 @@ summary {
 </ul></li>
 <li><a href="#conclusions">Conclusions</a></li>
 <li><a href="#future-work">Future Work</a></li>
+<li><a href="#sources">Sources</a></li>
 </ul>
 </div>
 
@@ -639,6 +640,15 @@ title_vs_article = function(title, article, sentiment){
 <h1>Future Work</h1>
 <p>One major issue we ran into while working is that we were completely uncertain as to how this dataset was created, and thus unsure that it was reliably sampled. With a subject as polarized as what constitutes “fake” news, it’s important to have a trustworthy dataset to base your analysis off of. However, there were some notable issues with our particular dataset that made us doubt its legitimacy. For example, the incredible spike of real news datapoints in late 2017 and the dramatic drop of mentions of “Trump,” who as the President should always be quite commonly featured in mainstream news articles, were both phenomena that we couldn’t think of an explanation for, making us believe it was the product of unreliable sampling by the creator of the dataset. The unusually high occurrence of “Reuters” is somewhat understandable given that many other reporters source their coverage from them, but there are other organizations like the Associated Press that perform similar functions. Given the other unexplainable characteristics of our dataset, the fact that only Reuters was in the top words is also somewhat questionable.</p>
 <p>For further study, we could build a classifier to actually determine the likelihood of whether any given news article is real or fake. We could also do the text analysis with n-grams to look at not just words individually, but as groups of words. Data collection could be improved as well — instead of relying on an online dataset that was created in an unclear way, we could make our own, which would help us not only clear up any uncertainty but also add extra labels that would help develop more advanced models. There could have been a more in-depth definition of what a “fake” article is — it could mean misleading, deliberately deceptive, or just completely factually wrong. Our dataset didn’t distinguish between those, simply throwing all the articles into separate “real” and “fake” CSV files that we had to manually combine. It would have also been nice to have each articles’ source as a label; it was possible to manually find out the source just by copy/pasting the title verbatim into Google, but it would have been too tedious for us to do that for 40,000+ articles.</p>
+</div>
+<div id="sources" class="section level1">
+<h1>Sources</h1>
+<p>Background Image: <a href="https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fbernardmarr%2Ffiles%2F2018%2F05%2FAdobeStock_187220917-1200x796.jpg" class="uri">https://thumbor.forbes.com/thumbor/960x0/https%3A%2F%2Fblogs-images.forbes.com%2Fbernardmarr%2Ffiles%2F2018%2F05%2FAdobeStock_187220917-1200x796.jpg</a></p>
+<p>Data: <a href="https://www.kaggle.com/clmentbisaillon/fake-and-real-news-dataset#" class="uri">https://www.kaggle.com/clmentbisaillon/fake-and-real-news-dataset#</a></p>
+<p>Text Mining Lecture Code</p>
+<p>Twitter Lab Code</p>
+<p>Politico Article: <a href="https://www.politico.com/news/2020/04/16/facebook-fake-news-coronavirus-190054" class="uri">https://www.politico.com/news/2020/04/16/facebook-fake-news-coronavirus-190054</a></p>
+<p>Weapons of Math Destruction</p>
 </div>
 
 
