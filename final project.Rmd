@@ -2,10 +2,16 @@
 title: "DS4001 Final Project"
 author: "Alex Shen, Andrew Niu"
 date: "5/7/2020"
-output: html_document
+output:
+  html_document:
+    toc: yes
+    theme: cerulean
+  prettydoc::html_pretty:
+    theme: cayman
+    toc: yes 
 ---
 
-```{r setup, include=FALSE}
+```{r setup, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 ```
 
@@ -72,7 +78,7 @@ head(frequency, 5)
 
 Obviously, with any data analysis it's important to understand the data you're using. To understand the timeframe of our dataset, we simply graphed a simple histogram of the dates that the articles were published.
 
-```{r plot_dates}
+```{r plot_dates, echo=FALSE}
 ggplot(data, aes(x=formatted_date, fill=truth)) +
   geom_histogram(position="identity", bins=25, show.legend=FALSE) +
   facet_wrap(~truth, ncol=1) + 
@@ -89,9 +95,9 @@ We're not certain as to why the amount of articles jumped so drastically in late
 
 ## Word Frequencies
 
-**we wanted to understand word freqs for some reason**
+News is news, so we expected both real and fake news to cover similar topics, but we wondered if there was a significant difference in what real and fake news chose to focus on. 
 
-The simplest way ~~to do this~~ was to simply take the top 5 words from both the fake news and real news categories and examine both their individual frequencies and the distribution among the top 5.
+Our heuristic for this was simply looking at the top 5 words from both the fake news and real news categories and examine both their individual frequencies and the distribution among the top 5. Since more news coverage would obviously result in more of a particular word showing up in articles, we decided that word frequency was a good measurement of news interest.
 
 ```{r freqs}
 top_words = frequency %>% 
@@ -102,30 +108,33 @@ top_words = frequency %>%
 # will be from fake news and the last 5 will be from real news
 top_fake = top_words[1:5,] 
 top_real = top_words[6:10,]
+```
 
-top_words_plot = function(data, color_hex){ # template graph
-  return(ggplot(top_fake, aes(x=reorder(word,n), y=n)) +
+Now that we have our top 5 words for each category, let's put them on a bar graph.
+
+```{r freqs_plot, echo=FALSE}
+top_words_plot = function(data, color_hex, title_str){ # template graph
+  return(ggplot(data, aes(x=reorder(word,n), y=n)) +
            geom_col(fill=color_hex) +
            facet_wrap(~truth) +
            theme(axis.text.x = element_text(angle = 15, hjust = 1)) +
-           labs(x="Word", y="Frequency") +
+           labs(x="Word", y="Frequency", title=title_str) +
            ylim(0, 80000))
 }
 
-fake_plot = top_words_plot(top_fake, "#FF4242") # hex code for red
-real_plot = top_words_plot(top_real, "#2BFF2B") # hex code for green
+fake_plot = top_words_plot(top_fake, "#FF4242", "Top Used Words in Fake News") # hex code for red
+real_plot = top_words_plot(top_real, "#2BFF2B", "Top Used Words in Real News") # hex code for green
 
 grid.arrange(fake_plot, real_plot, ncol=2)
 ```
 
 As you can see, the words "Trump" and "President" are both frequently included in both fake and real news. This is, of course, not particularly surprising. Any US president would naturally be at or near the top of a word count of a dataset containing primarily American news, but this doesn't explain why Trump's name appears *so much more* than any other word in fake news particularly, when the gap is significantly closer in real news. Our guess is that Trump is simply an especially polarizing figure, so demagogues on both sides of the political aisle have an incentive to constantly invoke his name to stir up either support or opposition of the president.
 
-**include note on how trump is SO MUCH MORE prominent in fake news vs. everything else**
-**fake media focus on people vs. institutions of government**
-
 "Obama" and "Clinton" also show up prominently, which makes sense given that Obama was the previous president and Hillary ran essentially as his successor. Both are quite controversial in right-wing media (especially with extreme sources who are likely to create fake news), and the election year where both were prominent in mainstream political discourse spans a large portion of the dataset, so both of them were naturally mentioned plenty of times in fake news.
 
 Other than President Trump, real news covers more mundane topics — "house" (presumably just part of "White House"), "government," and "Reuters" (a prominent international news organization) round out our top 5 words. This also lines up with what we expected, because a lot of the news isn't supposed to be flashy; a lot of important reporting is done on the complex mechanics of government, which may not be interesting to a mainstream audience.
+
+Another interesting difference we noticed is that fake news tends to focus on individuals (Trump, Clinton, Obama) whereas real news focuses on institutions ("government," "house," "reuters"). President Trump shows up heavily in both, but that's just because he's the president. This reemphasizes the tendency of fake news to pursue flashy content — i.e. scandalous stories about polarizing individuals — whereas real news focuses on more standard government actions.
 
 
 ## Words over time
@@ -173,7 +182,7 @@ top_slopes <- slopes %>%
 ```
 
 After all that number crunching, the only thing we have left to do is to graph our real and fake news data and compare them. 
-```{r plot_freqtime_function, include=FALSE}
+```{r plot_freqtime_function, echo=FALSE}
 plot_freqtime = function(truth_val){
   freqs = words_over_time %>%
     inner_join(top_slopes, by = c("word", "truth")) %>%
@@ -192,13 +201,13 @@ plot_freqtime = function(truth_val){
 ## {.tabset}
 
 ### Real News Words Over Time
-```{r real_graph}
+```{r real_graph, echo=FALSE}
 plot_freqtime("Real")
 ```
 
 
 ### Fake News Words Over Time
-```{r fake_graph}
+```{r fake_graph, echo=FALSE}
 plot_freqtime("Fake")
 ```
 
@@ -214,7 +223,7 @@ A common guess might be that fake news, with its trend towards clickbait-style c
 
 # sent_df: dataframe with sentiment values
 # sentiment: entiment label, "value" for afinn and "sentiment" for nrc
-# This function takes in a dataframe with sentiment values and outputs the frequency of each factor for both real and fake news articles.
+# This function takes in a dataframe with sentiment values and outputs the frequency of each factor for both real and fake news articles. We use this function to help generate our graphs later (graph code not shown to avoid clutter)
 get_freq = function(sent_df, sentiment){
   # this is a quirk with R function parameters
   # need to create a new column called sentiment set equal to the column of the string passed into the variable sentiment
@@ -231,14 +240,6 @@ get_freq = function(sent_df, sentiment){
   return(frequency)
 }
 
-plot_sentiments = function(dataset, title_str){
-  return(ggplot(dataset, aes(x=sentiment, y=freq, fill=truth)) + 
-           geom_bar(stat="identity",position="dodge") + 
-           labs(title=title_str, y="Frequency (as a percentage of total)", x="Sentiment") +
-           scale_fill_manual(values=c("#FF4242", "#2BFF2B")) +
-           scale_y_continuous(labels = function(x) paste0(x*100, "%"))) +
-    theme(legend.title = element_blank()) 
-}
 sentiment_afinn = cleaned %>% 
   inner_join(get_sentiments("afinn"))
 abs = sentiment_afinn %>%
@@ -247,13 +248,24 @@ sentiment_nrc = cleaned %>%
   inner_join(get_sentiments("nrc"))
 ```
 
+```{r plot_sentiments, echo=FALSE}
+plot_sentiments = function(dataset, title_str){
+  return(ggplot(dataset, aes(x=sentiment, y=freq, fill=truth)) + 
+           geom_bar(stat="identity",position="dodge") + 
+           labs(title=title_str, y="Frequency (as a percentage of total)", x="Sentiment") +
+           scale_fill_manual(values=c("#FF4242", "#2BFF2B")) +
+           scale_y_continuous(labels = function(x) paste0(x*100, "%"))) +
+    theme(legend.title = element_blank()) 
+}
+```
+
 ### {.tabset}
 
 #### AFINN
 
 It appears that real news articles have a higher frequency of moderate sentiment values, whereas fake news articles. It's also worth noting that fake articles lean more towards negatively charged words, whereas real news articles seem to be a little less skewed.
 
-```{r afinn,cache=TRUE}
+```{r afinn,cache=TRUE, echo=FALSE}
 plot_sentiments(get_freq(sentiment_afinn, "value"), "AFINN Sentiments") + 
   scale_x_continuous(limits=c(-5,5), breaks=seq(-5,5,1))
 ```
@@ -262,7 +274,7 @@ plot_sentiments(get_freq(sentiment_afinn, "value"), "AFINN Sentiments") +
 
 If we take the absolute value of the AFINN score, we can isolate the overall strength of sentiment in our text. We can see even more clearly that real news articles have a higher frequency of moderate AFFFIN values of 1 and 2, whereas fake news articles tend to use more charged language.
 
-```{r abs_value, cache=TRUE}
+```{r abs_value, cache=TRUE, echo=FALSE}
 plot_sentiments(get_freq(abs, "value"), "AFINN Sentiments (Absolute Values)") + 
   scale_x_continuous(limits=c(0,5), breaks=seq(0,5,1))
 ```
@@ -271,7 +283,7 @@ plot_sentiments(get_freq(abs, "value"), "AFINN Sentiments (Absolute Values)") +
 
 Our NRC sentiment analysis gives us a little more specificity to our analysis while also confirming our findings from the AFINN analysis. Fake news articles have higher frequencies of negatively charged words, especially those of anger, disgust, and general negative sentiment. At the same time, they have lower occurrences of positivity and trust when compared to real news articles.
 
-```{r nrc, cache=TRUE}
+```{r nrc, cache=TRUE, echo=FALSE}
 plot_sentiments(get_freq(sentiment_nrc, "sentiment"), "NRC Sentiments")
 ```
 
@@ -283,6 +295,13 @@ titles = data %>%
   unnest_tokens(word, title, token="words") %>%
   anti_join(stop_words) %>%
   filter(!str_detect(word, "[.:0-9]"))
+
+title_afinn = titles %>%
+  inner_join(get_sentiments("afinn"))
+title_abs = title_afinn %>%
+  mutate(value = abs(value))
+title_nrc = titles %>%
+  inner_join(get_sentiments("nrc"))
 ```
 
 ### {.tabset}
@@ -291,26 +310,19 @@ When we run the same sentiment analysis on the titles of our articles, we get ve
 
 #### AFINN
 
-```{r title_afinn, cache=TRUE}
-
-title_afinn = titles %>%
-  inner_join(get_sentiments("afinn"))
+```{r title_afinn, cache=TRUE, echo=FALSE}
 plot_sentiments(get_freq(title_afinn, "value"), "Title AFINN Sentiments")
 ```
 
 #### AFINN Absolute Value
 
-```{r title_abs, cache=TRUE}
-title_abs = title_afinn %>%
-  mutate(value = abs(value))
+```{r title_abs, cache=TRUE, echo=FALSE}
 plot_sentiments(get_freq(title_abs, "value"), "Title AFINN Sentiments (Absolute Values)")
 ```
 
 #### NRC
 
-```{r title_nrc, cach=TRUE}
-title_nrc = titles %>%
-  inner_join(get_sentiments("nrc"))
+```{r title_nrc, cache=TRUE, echo=FALSE}
 plot_sentiments(get_freq(title_nrc, "sentiment"), "Title NRC Sentiments")
 ```
 
@@ -344,8 +356,8 @@ title_vs_article = function(title, article, sentiment){
 }
 ```
 
-Another helper function to graph all the combined sentiments with consistent styling:
-```{r combined_plotter}
+
+```{r combined_plotter, echo=FALSE}
 plot_combined_sentiments = function(dataset, title_str){
   ggplot(dataset, aes(x=sentiment, y=diff, fill=text)) +
     geom_bar(stat="identity",position="dodge") + 
@@ -363,7 +375,7 @@ plot_combined_sentiments = function(dataset, title_str){
 
 As seen in the earlier graphs, fake news articles are more charged, particularly with negative sentiment, but we can also observe the difference in magnitude between the titles and the articles themselves. In every category except for neutral positive words, the title has a greater magnitude of difference than the articles. This essentially means that the level of bias is even greater in fake news titles when compared to the level of bias in fake news articles.
 
-```{r AFINN_combined}
+```{r AFINN_combined, echo=FALSE}
 plot_combined_sentiments(title_vs_article(title_afinn, sentiment_afinn, "value"), 
                          "Title vs. Article AFINN Sentiment") +
   scale_x_continuous(limits=c(-5,5), breaks=seq(-5,5,1))
@@ -373,7 +385,7 @@ plot_combined_sentiments(title_vs_article(title_afinn, sentiment_afinn, "value")
 
 Similar to the absolute value graphs above, this graph further emphasizes the difference in level of bias. The difference between real and fake news titles are even more polarized than the articles themselves.
 
-```{r abs_combined}
+```{r abs_combined, echo=FALSE}
 plot_combined_sentiments(title_vs_article(title_abs, abs, "value"), 
                          "Title vs. Article AFINN Sentiment (Absolute Values)") + 
   scale_x_continuous(limits=c(0,5), breaks=seq(0,5,1))
@@ -383,7 +395,7 @@ plot_combined_sentiments(title_vs_article(title_abs, abs, "value"),
 
 We again see that fake news articles bias more towards negative emotions with the titles of these fake news articles being even more negative. We can see the same trend with real news articles and positivity and trust.
 
-```{r NRC_combined}
+```{r NRC_combined, echo=FALSE}
 plot_combined_sentiments(title_vs_article(title_nrc, sentiment_nrc, "sentiment"), 
                          "Title vs. Article NRC Sentiment")
 ```
