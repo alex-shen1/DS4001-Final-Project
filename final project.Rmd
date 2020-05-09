@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 ```
 
 ## Question
@@ -16,7 +16,7 @@ We've all been told growing up, "Don't believe everything you read on the Intern
 
 ## Exploratory Data Analysis
 
-```{r libraries, message=FALSE, warning=FALSE}
+```{r libraries}
 library(tidytext)
 library(readr)
 library(dplyr)
@@ -33,7 +33,7 @@ library(broom)
 
 
 
-```{r load-data, message=FALSE, warning=FALSE}
+```{r load-data}
 
 real_news = read_csv("True.csv")
 fake_news = read_csv("Fake.csv")
@@ -43,7 +43,7 @@ data = bind_rows(real_news %>% mutate(truth = "Real"),
 
 ```
 
-```{r tokenize, cache=TRUE, message=FALSE}
+```{r tokenize, cache=TRUE}
 cleaned = data %>% 
   unnest_tokens(word, text, token="words") %>%
   anti_join(stop_words) %>% 
@@ -60,11 +60,12 @@ frequency <- cleaned %>%
 ## Time window (??)
 
 Obviously, with any data analysis it's important to understand the data you're working with. 
-```{r plot_dates, warning=FALSE}
+```{r plot_dates}
 ggplot(data, aes(x=formatted_date, fill=truth)) +
   geom_histogram(position="identity", bins=25, show.legend=FALSE) +
   facet_wrap(~truth, ncol=1) + 
-  labs(x="Date", y="Count")
+  labs(x="Date", y="Count") +
+  scale_fill_manual(values=c("#FF4242", "#2BFF2B"))
 
 ```
 
@@ -113,7 +114,7 @@ Other than President Trump, real news covers more mundane topics — "house" (pr
 ## Words over time
 
 We then wondered if the top word frequencies had changed over time — our first guess was that words like "Hillary" and "Clinton" would go down after she lost the 2016 election, whereas "Trump" would go up. 
-```{r words_over_time_data, message=FALSE, cache=TRUE}
+```{r words_over_time_data, cache=TRUE}
 words_over_time = cleaned %>% 
   mutate(time_floor = floor_date(formatted_date, unit = "1 month")) %>% 
   count(time_floor, truth, word) %>% 
@@ -126,7 +127,7 @@ words_over_time = cleaned %>%
   filter(word_total > 18000)
 ```
 
-```{r words_over_time_nesting, warning=FALSE, cache=TRUE,}
+```{r words_over_time_nesting, cache=TRUE,}
 nested_data = words_over_time %>% 
   nest(-word, -truth)
 
@@ -134,7 +135,7 @@ nested_models = nested_data %>%
   mutate(models = map(data, ~ glm(cbind(count,time_total) ~ time_floor, ., family="binomial")))
 ```
 
-```{r words_over_time_graph, warning=FALSE}
+```{r words_over_time_graph}
 slopes <- nested_models %>%
   mutate(models = map(models, tidy)) %>%
   unnest(cols = c(models)) %>%
@@ -167,13 +168,13 @@ Here we use the helper function to generate our graphs.
 ## {.tabset}
 
 ### Real News Words Over Time
-```{r real_graph, warning=FALSE}
+```{r real_graph}
 plot_freqtime("Real")
 ```
 
 
 ### Fake News Words Over Time
-```{r fake_graph, warning=FALSE}
+```{r fake_graph}
 plot_freqtime("Fake")
 ```
 
@@ -205,24 +206,55 @@ plot_sentiments = function(dataset, title_str){
            geom_bar(stat="identity",position="dodge") + 
            labs(title=title_str, y="Frequency (as a percentage of total)", x="Sentiment") +
            scale_fill_manual(values=c("#FF4242", "#2BFF2B")) +
-           scale_y_continuous(labels = function(x) paste0(x*100, "%")))
+           scale_y_continuous(labels = function(x) paste0(x*100, "%"))) +
+    theme(legend.title = element_blank()) 
 }
 sentiment_affin = cleaned %>% 
   inner_join(get_sentiments("afinn"))
-plot_sentiments(get_freq(sentiment_affin, "value"), "AFFIN Sentiments") + scale_x_continuous(limits=c(-5,5), breaks=seq(-5,5,1))
-
 abs = sentiment_affin %>%
   mutate(value = abs(value))
-plot_sentiments(get_freq(abs, "value"), "AFFIN Sentiments (Absolute Values)") + scale_x_continuous(limits=c(0,5), breaks=seq(0,5,1))
-
 sentiment_nrc = cleaned %>% 
   inner_join(get_sentiments("nrc"))
+
+
+plot_sentiments(get_freq(sentiment_affin, "value"), "AFFIN Sentiments") + 
+  scale_x_continuous(limits=c(-5,5), breaks=seq(-5,5,1))
+
+plot_sentiments(get_freq(abs, "value"), "AFFIN Sentiments (Absolute Values)") + 
+  scale_x_continuous(limits=c(0,5), breaks=seq(0,5,1))
+
 plot_sentiments(get_freq(sentiment_nrc, "sentiment"), "NRC Sentiments")
 ```
 
 ### Title vs. Text
 
-```{r}
+Title Data
+```{r titledata}
+titles = data %>%
+  unnest_tokens(word, title, token="words") %>%
+  anti_join(stop_words) %>%
+  filter(!str_detect(word, "[.:0-9]"))
+```
+
+Basic Sentiment Analysis (similar to what we did with the text of the articles)
+```{r titlesentiment}
+
+title_affin = titles %>%
+  inner_join(get_sentiments("afinn"))
+plot_sentiments(get_freq(title_affin, "value"), "Title AFFIN Sentiments")
+
+title_abs = title_affin %>%
+  mutate(value = abs(value))
+plot_sentiments(get_freq(title_abs, "value"), "Title AFFIN Sentiments (Absolute Values)")
+
+title_nrc = titles %>%
+  inner_join(get_sentiments("nrc"))
+plot_sentiments(get_freq(title_nrc, "sentiment"), "Title NRC Sentiments")
+
+```
+
+
+```{r combined}
 # title: sentiment data on titles
 # article: sentiment data on articles
 # sentiment: sentiment label, "value" for affin and "sentiment" for nrc
@@ -238,47 +270,39 @@ title_vs_article = function(title, article, sentiment){
     group_by(text) %>%
     select(truth, sentiment, freq) %>%
     spread(truth, freq) %>% # separate real and fake values into separate columns
-    arrange(real, fake) %>%
-    mutate(real = replace_na(real,0), # replace na values with 0
-           fake = replace_na(fake,0),
-           diff = real-fake) # take the difference in frequency between real and fake occurrences
+    arrange(Real, Fake) %>%
+    mutate(Real = replace_na(Real,0), # replace na values with 0
+           Fake = replace_na(Fake,0),
+           diff = Real-Fake) # take the difference in frequency between real and fake occurrences
   return(combined)
 }
+```
 
-titles = data %>%
-  unnest_tokens(word, title, token="words") %>%
-  anti_join(stop_words) %>%
-  filter(!str_detect(word, "[.:0-9]"))
-
-
-title_affin = titles %>%
-  inner_join(get_sentiments("afinn"))
-plot_sentiments(get_freq(title_affin, "value"), "test")
-# ggplot(get_freq(title_affin, "value"), aes(x=sentiment, y = freq, fill=truth)) +
-#   geom_bar(stat="identity",position="dodge")
-title_abs = title_affin %>%
-  mutate(value = abs(value))
-# ggplot(get_freq(title_abs, "value"), aes(x=sentiment, y = freq, fill=truth)) +
-#   geom_bar(stat="identity",position="dodge")
-title_nrc = titles %>%
-  inner_join(get_sentiments("nrc"))
-# ggplot(get_freq(title_nrc, "sentiment"), aes(x=sentiment, y = freq, fill=truth)) +
-#   geom_bar(stat="identity",position="dodge")
-
-
-
+Another helper function to graph all the combined sentiments with consistent styling:
+```{r combined_plotter}
 plot_combined_sentiments = function(dataset, title_str){
   ggplot(dataset, aes(x=sentiment, y=diff, fill=text)) +
-  geom_bar(stat="identity",position="dodge")
+    geom_bar(stat="identity",position="dodge") + 
+    labs(title=title_str, x="Sentiment", y="Difference in Percentage Frequencies (Real-Fake)") + 
+    scale_fill_manual(values=c("#FF4B2B", "#3A82FF")) +
+    scale_y_continuous(labels = function(x) paste0(x*100, "%")) +
+    theme(legend.title = element_blank()) 
 }
-# ggplot(title_vs_article(title_affin, sentiment_affin, "value"), aes(x=sentiment, y=diff, fill=text)) +
-#   geom_bar(stat="identity",position="dodge")
-# ggplot(title_vs_article(title_abs, abs, "value"), aes(x=sentiment, y=diff, fill=text)) +
-#   geom_bar(stat="identity",position="dodge")
-# ggplot(title_vs_article(title_nrc, sentiment_nrc, "sentiment"), aes(x=sentiment, y=diff, fill=text)) +
-#   geom_bar(stat="identity",position="dodge")
+
+```
 
 
+```{r combined_graphs}
+plot_combined_sentiments(title_vs_article(title_affin, sentiment_affin, "value"), 
+                         "Title vs. Article AFFIN Sentiment") +
+  scale_x_continuous(limits=c(0,5), breaks=seq(0,5,1))
+
+plot_combined_sentiments(title_vs_article(title_abs, abs, "value"), 
+                         "Title vs. Article AFFIN Sentiment (Absolute Values)") + 
+  scale_x_continuous(limits=c(0,5), breaks=seq(0,5,1))
+
+plot_combined_sentiments(title_vs_article(title_nrc, sentiment_nrc, "sentiment"), 
+                         "Title vs. Article NRC Sentiment")
 ```
 
 ## Conclusions
