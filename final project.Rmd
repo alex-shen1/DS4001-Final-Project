@@ -206,14 +206,14 @@ Here, the most interesting developments are clearly Trump and Clinton, the two 2
 
 ## Sentiment Analysis
 
-As interesting as word frequencies are, they can't actually give us that much information as to whether or not a given article is real or fake. That's where sentiment analysis comes in, where we figure out the "sentiment" (feeling) conveyed by each word and tally up the most common sentiments expressed by both real and fake news. We can measure sentiment in two different ways: AFFIN, where sentiment is just indexed on a scale of -5 to 5 (negative to positive emotion), and NRC, which associates words with common emotions like fear, anger, and sadness. 
+As interesting as word frequencies are, they can't actually give us that much information as to whether or not a given article is real or fake. That's where sentiment analysis comes in, where we figure out the "sentiment" (feeling) conveyed by each word and tally up the most common sentiments expressed by both real and fake news. We can measure sentiment in two different ways: AFINN, where sentiment is just indexed on a scale of -5 to 5 (negative to positive emotion), and NRC, which associates words with common emotions like fear, anger, and sadness. 
 
 A common guess might be that fake news, with its trend towards clickbait-style content, might have more extreme sentiments, but let's see how that bears out in the data.
 
 ```{r sentiments, cache=TRUE}
 
 # sent_df: dataframe with sentiment values
-# sentiment: entiment label, "value" for affin and "sentiment" for nrc
+# sentiment: entiment label, "value" for afinn and "sentiment" for nrc
 # This function takes in a dataframe with sentiment values and outputs the frequency of each factor for both real and fake news articles.
 get_freq = function(sent_df, sentiment){
   # this is a quirk with R function parameters
@@ -239,24 +239,43 @@ plot_sentiments = function(dataset, title_str){
            scale_y_continuous(labels = function(x) paste0(x*100, "%"))) +
     theme(legend.title = element_blank()) 
 }
-sentiment_affin = cleaned %>% 
+sentiment_afinn = cleaned %>% 
   inner_join(get_sentiments("afinn"))
-abs = sentiment_affin %>%
+abs = sentiment_afinn %>%
   mutate(value = abs(value))
 sentiment_nrc = cleaned %>% 
   inner_join(get_sentiments("nrc"))
+```
 
+### {.tabset}
 
-plot_sentiments(get_freq(sentiment_affin, "value"), "AFFIN Sentiments") + 
+#### AFINN
+
+It appears that real news articles have a higher frequency of moderate sentiment values, whereas fake news articles. It's also worth noting that fake articles lean more towards negatively charged words, whereas real news articles seem to be a little less skewed.
+
+```{r afinn,cache=TRUE}
+plot_sentiments(get_freq(sentiment_afinn, "value"), "AFINN Sentiments") + 
   scale_x_continuous(limits=c(-5,5), breaks=seq(-5,5,1))
+```
 
-plot_sentiments(get_freq(abs, "value"), "AFFIN Sentiments (Absolute Values)") + 
+#### AFINN Absolute Value
+
+If we take the absolute value of the AFINN score, we can isolate the overall strength of sentiment in our text. We can see even more clearly that real news articles have a higher frequency of moderate AFFFIN values of 1 and 2, whereas fake news articles tend to use more charged language.
+
+```{r abs_value, cache=TRUE}
+plot_sentiments(get_freq(abs, "value"), "AFINN Sentiments (Absolute Values)") + 
   scale_x_continuous(limits=c(0,5), breaks=seq(0,5,1))
+```
 
+#### NRC
+
+Our NRC sentiment analysis gives us a little more specificity to our analysis while also confirming our findings from the AFINN analysis. Fake news articles have higher frequencies of negatively charged words, especially those of anger, disgust, and general negative sentiment. At the same time, they have lower occurrences of positivity and trust when compared to real news articles.
+
+```{r nrc, cache=TRUE}
 plot_sentiments(get_freq(sentiment_nrc, "sentiment"), "NRC Sentiments")
 ```
 
-### Title vs. Text
+### Title vs. Article
 
 Title Data
 ```{r titledata}
@@ -266,28 +285,45 @@ titles = data %>%
   filter(!str_detect(word, "[.:0-9]"))
 ```
 
-Basic Sentiment Analysis (similar to what we did with the text of the articles)
-```{r titlesentiment}
+### {.tabset}
 
-title_affin = titles %>%
+When we run the same sentiment analysis on the titles of our articles, we get very similar results. However, the differences seem to be more exaggerated for our titles than the actual content of our articles. This trend confirms our hypotheses, as authors of fake news articles tend to use flashy and clickbaity titles in hopes of luring in potential readers. 
+
+#### AFINN
+
+```{r title_afinn, cache=TRUE}
+
+title_afinn = titles %>%
   inner_join(get_sentiments("afinn"))
-plot_sentiments(get_freq(title_affin, "value"), "Title AFFIN Sentiments")
+plot_sentiments(get_freq(title_afinn, "value"), "Title AFINN Sentiments")
+```
 
-title_abs = title_affin %>%
+#### AFINN Absolute Value
+
+```{r title_abs, cache=TRUE}
+title_abs = title_afinn %>%
   mutate(value = abs(value))
-plot_sentiments(get_freq(title_abs, "value"), "Title AFFIN Sentiments (Absolute Values)")
+plot_sentiments(get_freq(title_abs, "value"), "Title AFINN Sentiments (Absolute Values)")
+```
 
+#### NRC
+
+```{r title_nrc, cach=TRUE}
 title_nrc = titles %>%
   inner_join(get_sentiments("nrc"))
 plot_sentiments(get_freq(title_nrc, "sentiment"), "Title NRC Sentiments")
-
 ```
 
+### Comparison
+
+To further investigate the difference in sentiment, or perhaps exaggeration, of our titles, we compare them directly to the sentiment of the articles themselves.
+
+This is a helper function designed to combine a title sentiment dataset and an article sentiment dataset. The key metric here is the difference in frequency of each sentiment value between real and fake articles. A positive value indicates that there was a higher occurrence of the sentiment value in real articles, whereas a negative value indicates a higher occurrence in fake articles. We want to compare the differences of the real and fake articles between the titles of the articles and the articles themselves.
 
 ```{r combined}
 # title: sentiment data on titles
 # article: sentiment data on articles
-# sentiment: sentiment label, "value" for affin and "sentiment" for nrc
+# sentiment: sentiment label, "value" for afinn and "sentiment" for nrc
 # This function takes in two dataframes with sentiment values and outputs a new dataframe.
 # Each row in this dataframe represents the difference in sentiment value frequencies between
 # real and fake news articles for either the title or article body.
@@ -321,16 +357,33 @@ plot_combined_sentiments = function(dataset, title_str){
 
 ```
 
+### {.tabset}
 
-```{r combined_graphs}
-plot_combined_sentiments(title_vs_article(title_affin, sentiment_affin, "value"), 
-                         "Title vs. Article AFFIN Sentiment") +
-  scale_x_continuous(limits=c(0,5), breaks=seq(0,5,1))
+#### AFINN
 
+As seen in the earlier graphs, fake news articles are more charged, particularly with negative sentiment, but we can also observe the difference in magnitude between the titles and the articles themselves. In every category except for neutral positive words, the title has a greater magnitude of difference than the articles. This essentially means that the level of bias is even greater in fake news titles when compared to the level of bias in fake news articles.
+
+```{r AFINN_combined}
+plot_combined_sentiments(title_vs_article(title_afinn, sentiment_afinn, "value"), 
+                         "Title vs. Article AFINN Sentiment") +
+  scale_x_continuous(limits=c(-5,5), breaks=seq(-5,5,1))
+```
+
+#### AFINN Absolute Value
+
+Similar to the absolute value graphs above, this graph further emphasizes the difference in level of bias. The difference between real and fake news titles are even more polarized than the articles themselves.
+
+```{r abs_combined}
 plot_combined_sentiments(title_vs_article(title_abs, abs, "value"), 
-                         "Title vs. Article AFFIN Sentiment (Absolute Values)") + 
+                         "Title vs. Article AFINN Sentiment (Absolute Values)") + 
   scale_x_continuous(limits=c(0,5), breaks=seq(0,5,1))
+```
 
+#### NRC
+
+We again see that fake news articles bias more towards negative emotions with the titles of these fake news articles being even more negative. We can see the same trend with real news articles and positivity and trust.
+
+```{r NRC_combined}
 plot_combined_sentiments(title_vs_article(title_nrc, sentiment_nrc, "sentiment"), 
                          "Title vs. Article NRC Sentiment")
 ```
