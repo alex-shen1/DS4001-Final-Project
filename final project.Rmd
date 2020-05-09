@@ -17,11 +17,13 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 
 # Question
 
-#### **How can we distinguish fake news from real news?**
+#### **What distinguishes fake news from real news?**
 
 We've all been told growing up, "Don't believe everything you read on the Internet." In the past, this simply meant avoiding obvious scams and hoaxes, like emails from Nigerian princes suspiciously promising you a share of their wealth. However, in this day and age, the proliferation of digital media in modern society has enabled a far more insidious practice: the writing and mass distribution of so-called "news" articles that *seem* true, and in fact may even incorporate some truthful elements, to push false or misleading claims. 
 
-As Cathy O'Neil warned us in *Weapons of Math Destruction*, "about two-thirds of American adults have a profile on Facebook. They spend thirty-nine minutes a day on the site, only four minutes less than they dedicate to face-to-face socializing. Nearly half of them, according to a Pew Research Center report, count on Facebook to deliver at least some of their news..." It goes without saying that Facebook is not exactly a hub of reputable reporting, so the fact that this many people get their news from such an unreliable platform is deeply concerning for anyone concerned about having a well-informed populace. Thus, we wanted to explore, in a data-driven way, what characterizes fake news and how we might be able to prevent it from tricking us. 
+As Cathy O'Neil warned us in *Weapons of Math Destruction*, "about two-thirds of American adults have a profile on Facebook. They spend thirty-nine minutes a day on the site, only four minutes less than they dedicate to face-to-face socializing. Nearly half of them, according to a Pew Research Center report, count on Facebook to deliver at least some of their news..." It goes without saying that Facebook is not exactly a hub of reputable reporting, so the fact that this many people get their news from such an unreliable platform is deeply concerning for anyone concerned about having a well-informed populace. Thus, we wanted to explore, in a data-driven way, what characterizes fake news and how we might be able to identify it. 
+
+**talk about investigation into FB fake news**
 
 # Exploratory Data Analysis
 
@@ -52,7 +54,7 @@ data = bind_rows(real_news %>% mutate(truth = "Real"),
 
 ```
 
-The first thing we do with the dataset is clean it in order to make it possible for us to perform text analysis. This means running it through a "tokenizer," which breaks up the raw text data into individual words (and other components/"tokens", but mostly just words). Next, we filter out numbers and "stop words" — these are words that are syntactically necessary, but don't actually contribute to a sentences' meaning, like "the", "a", etc. Once we clean up our data, we make a dataframe containing the frequencies of each word.
+The first thing we do with the dataset is clean it in order to make it possible for us to perform text analysis. This means running it through a "tokenizer," which breaks up the raw text data into individual words (and other components/"tokens", but mostly just words). Next, we filter out numbers and "stop words" — these are words that are syntactically necessary, but don't actually contribute to a sentences' meaning, like "the", "a", "and", etc. 
 
 ```{r tokenize, cache=TRUE}
 cleaned = data %>% 
@@ -96,7 +98,7 @@ We're not certain as to why the amount of articles jumped so drastically in late
 
 ## Word Frequencies
 
-News is news, so we expected both real and fake news to cover similar topics, but we wondered if there was a significant difference in what real and fake news chose to focus on. 
+News is news, so we expected both real and fake news to cover similar topics, but we wondered if there was a significant difference in what real and fake news chose to focus, which might reveal any potential bias. 
 
 Our heuristic for this was simply looking at the top 5 words from both the fake news and real news categories and examine both their individual frequencies and the distribution among the top 5. Since more news coverage would obviously result in more of a particular word showing up in articles, we decided that word frequency was a good measurement of news interest.
 
@@ -207,17 +209,20 @@ plot_freqtime = function(truth_val){
 plot_freqtime("Real")
 ```
 
+Like with overall mentions, Trump tended to dominate the real news cycle for most of our time period, which is only natural. His share of all real news coverage steadily increased throughout campaign season until it peaked roughly around late 2016, which is when the election was held. As expected, once the election was over the public at large (and thus the media as well) shifted their attention to different stories, so his share started declining.
+
+The most interesting development is the **massive** drop in mentions of President Trump at the end of 2017. We suspect this might be a result of our dataset's sampling — if you look back at our histogram of publication dates, our dataset has a much higher amount of articles from late 2017. Assuming that there are only so many stories about President Trump that can be written in a given timespan, filling up the dataset with many extra articles would naturally deflate his calculated share of total media coverage.
 
 ### Fake News Words Over Time
 ```{r fake_graph, echo=FALSE}
 plot_freqtime("Fake")
 ```
 
-Here, the most interesting developments are clearly Trump and Clinton, the two 2016 presidential contenders. We can observe that while fake news about Clinton dropped off dramatically after her loss (as she was no longer in the public eye), Trump has consistently had the most mentions in fake news
+Here, the most interesting developments are clearly Trump and Clinton, the two 2016 presidential contenders. We can observe that while fake news about Clinton dominated fake news in 2015 and periodically went up and down as the election proceeded, stories about her dropped off dramatically after her loss (as she was no longer in the public eye). On the other hand, Trump started at what looks to be nearly 0% of fake news coverage in early 2015 (presumably because he wasn't widely known early on), but has since consistently had the most mentions in fake news. We assume that any incumbent president would have a lot of fake news stories written about them, but once again, we also suspect that Trump himself is especially prone to having fake news written about him.
 
 # Sentiment Analysis Methods
 
-As interesting as word frequencies are, they can't actually give us that much information as to whether or not a given article is real or fake. That's where sentiment analysis comes in, where we figure out the "sentiment" (feeling) conveyed by each word and tally up the most common sentiments expressed by both real and fake news. We can measure sentiment in two different ways: AFINN, where sentiment is just indexed on a scale of -5 to 5 (negative to positive emotion), and NRC, which associates words with common emotions like fear, anger, and sadness. 
+As interesting as word frequencies are, they can't actually give us that much information as to whether or not a given article is real or fake. For example, both real and fake news articles frequently discuss President Trump, so knowing that an article frequently mentions him doesn't help us distinguish the legitimacy of the article at all. That's where sentiment analysis comes in, where we figure out the "sentiment" (feeling) conveyed by each word and tally up the most common sentiments expressed by both real and fake news. We can measure sentiment in two different ways: AFINN, where sentiment is just indexed on a scale of -5 to 5 (negative to positive emotion), and NRC, which associates words with common emotions like fear, anger, and sadness. 
 
 A common guess might be that fake news, with its trend towards clickbait-style content, might have more extreme sentiments, but let's see how that bears out in the data.
 
@@ -263,6 +268,8 @@ plot_sentiments = function(dataset, title_str){
 
 ### Article Sentiment {.tabset}
 
+Here we analyze the sentiment of the text of each article. 
+
 #### AFINN
 
 It appears that real news articles have a higher frequency of moderate sentiment values, whereas fake news articles. It's also worth noting that fake articles lean more towards negatively charged words, whereas real news articles seem to be a little less skewed.
@@ -289,9 +296,10 @@ Our NRC sentiment analysis gives us a little more specificity to our analysis wh
 plot_sentiments(get_freq(sentiment_nrc, "sentiment"), "NRC Sentiments")
 ```
 
-### Title vs. Article
+### Title Sentiment {.tabset}
 
-Title Data
+We then perform the same sentiment analysis on just the article titles:
+
 ```{r titledata}
 titles = data %>%
   unnest_tokens(word, title, token="words") %>%
@@ -306,9 +314,7 @@ title_nrc = titles %>%
   inner_join(get_sentiments("nrc"))
 ```
 
-### Title Sentiment {.tabset}
-
-When we run the same sentiment analysis on the titles of our articles, we get very similar results. However, the differences seem to be more exaggerated for our titles than the actual content of our articles. This trend confirms our hypotheses, as authors of fake news articles tend to use flashy and clickbaity titles in hopes of luring in potential readers. 
+As you can see from the graphs below, we get very similar results. However, the differences seem to be more exaggerated for our titles than the actual content of our articles. This trend confirms our hypotheses, as authors of fake news articles tend to use flashy and clickbaity titles in hopes of luring in potential readers. 
 
 #### AFINN
 
